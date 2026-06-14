@@ -1,0 +1,2337 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>教育现实评论图文生成器</title>
+  <style>
+    :root {
+      --bg: #090d12;
+      --bg-2: #101720;
+      --panel: rgba(19, 26, 35, .76);
+      --panel-strong: rgba(255, 250, 239, .96);
+      --paper: #fff8ea;
+      --paper-2: #f4ead8;
+      --ink: #1f1a14;
+      --text: #f6efe3;
+      --muted: #9ea8b3;
+      --muted-warm: #756a5d;
+      --line: rgba(255, 255, 255, .12);
+      --paper-line: #eadbc4;
+      --accent: #ff7a45;
+      --accent-2: #8ff0c2;
+      --accent-3: #f6c85f;
+      --blue: #68a8ff;
+      --danger: #ff6b6b;
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --shadow: 0 26px 90px rgba(0, 0, 0, .38);
+      --paper-shadow: 0 28px 70px rgba(13, 10, 6, .16);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(104, 168, 255, .26), transparent 28%),
+        radial-gradient(circle at 86% 14%, rgba(143, 240, 194, .16), transparent 24%),
+        radial-gradient(circle at 56% 82%, rgba(255, 122, 69, .18), transparent 28%),
+        linear-gradient(135deg, #06090d 0%, var(--bg) 44%, #121920 100%);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.88), transparent 82%);
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      background-image: repeating-linear-gradient(115deg, #fff 0 1px, transparent 1px 9px);
+      mix-blend-mode: overlay;
+      z-index: 0;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      animation: rise-in .5s ease both;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: .04em;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, var(--accent), var(--accent-3));
+      box-shadow: 0 10px 28px rgba(255, 122, 69, .32);
+      display: grid;
+      place-items: center;
+      color: #1b1008;
+      font-weight: 1000;
+    }
+
+    .system-pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .05);
+      backdrop-filter: blur(16px);
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 0 0 0 rgba(143, 240, 194, .55);
+      animation: pulse 1.8s ease infinite;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 22px;
+      margin-bottom: 22px;
+      animation: rise-in .56s ease both;
+    }
+
+    .hero-main, .process-card, .control-panel, .result-panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .hero-main {
+      position: relative;
+      min-height: 304px;
+      padding: 34px;
+      overflow: hidden;
+    }
+
+    .hero-main::before {
+      content: "";
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      right: -130px;
+      top: -160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,122,69,.28), transparent 66%);
+    }
+
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      right: 34px;
+      bottom: 28px;
+      width: 220px;
+      height: 120px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      transform: rotate(-12deg);
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-2);
+      font-weight: 950;
+      letter-spacing: .13em;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: currentColor;
+      opacity: .72;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 16px 0 16px;
+      max-width: 900px;
+      font-size: clamp(42px, 6vw, 88px);
+      line-height: .92;
+      letter-spacing: -.07em;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      color: #cdd5dc;
+      font-size: 17px;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .hero-stats {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .hero-chip {
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: #dce4e9;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .process-card {
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .process-card h2, .control-panel h2 {
+      margin: 0 0 14px;
+      font-size: 16px;
+      letter-spacing: .01em;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      align-items: center;
+      color: #d1dae0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .num {
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #071018;
+      background: linear-gradient(135deg, var(--accent-2), var(--blue));
+      font-weight: 1000;
+      font-size: 12px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .control-panel {
+      position: sticky;
+      top: 18px;
+      padding: 22px;
+      animation: rise-in .58s ease .06s both;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: -4px 0 18px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 950;
+      color: #dfe7ed;
+      letter-spacing: .04em;
+      margin-bottom: 7px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, .13);
+      background: rgba(255, 255, 255, .065);
+      color: var(--text);
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+      outline: none;
+      transition: border .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    select { appearance: none; }
+
+    option { color: #141a20; background: #f9f2e6; }
+
+    input::placeholder, textarea::placeholder { color: rgba(222, 229, 235, .42); }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(143, 240, 194, .76);
+      box-shadow: 0 0 0 4px rgba(143, 240, 194, .10);
+      background: rgba(255, 255, 255, .09);
+      transform: translateY(-1px);
+    }
+
+    .hint {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .settings-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, .055);
+    }
+
+    .settings-entry strong {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .settings-entry span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .settings-entry button { white-space: nowrap; }
+
+    .settings-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(3, 6, 10, .66);
+      backdrop-filter: blur(16px);
+    }
+
+    .settings-modal.open { display: grid; }
+
+    .settings-dialog {
+      width: min(760px, 100%);
+      max-height: min(860px, calc(100vh - 48px));
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: rgba(19, 26, 35, .96);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .settings-dialog .panel-head { margin-bottom: 10px; }
+
+    .settings-section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .settings-section h3 {
+      margin: 0 0 12px;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 14px 17px;
+      font-weight: 1000;
+      color: #101820;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
+      box-shadow: 0 16px 34px rgba(143, 240, 194, .18);
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 46px rgba(143, 240, 194, .24);
+      filter: saturate(1.06);
+    }
+
+    button:active { transform: translateY(0); }
+
+    button.secondary {
+      color: #dbe5ec;
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .12);
+      box-shadow: none;
+    }
+
+    .result-panel {
+      padding: 0;
+      overflow: hidden;
+      min-height: 720px;
+      animation: rise-in .58s ease .12s both;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(13, 18, 25, .78);
+      backdrop-filter: blur(18px);
+    }
+
+    .toolbar .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      padding: 10px 13px;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #cbd6dd;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 0 20px rgba(143, 240, 194, .7);
+    }
+
+    #result {
+      padding: 28px;
+    }
+
+    .empty {
+      min-height: 610px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #9ea8b3;
+      border: 1px dashed rgba(255,255,255,.18);
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 50% 32%, rgba(143,240,194,.10), transparent 30%),
+        rgba(255, 255, 255, .04);
+    }
+
+    .empty h2 {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 24px;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    }
+
+    .empty-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 26px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, rgba(255,122,69,.28), rgba(143,240,194,.16));
+      border: 1px solid rgba(255,255,255,.14);
+      font-size: 30px;
+    }
+
+    .article {
+      max-width: 840px;
+      margin: 0 auto;
+      color: var(--ink);
+      animation: article-in .46s ease both;
+    }
+
+    .cover {
+      min-height: 430px;
+      border-radius: 32px;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(135deg, rgba(15,18,22,.88), rgba(15,18,22,.46)),
+        var(--cover, linear-gradient(135deg, #ff7a45, #2d6b57));
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .cover::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 24px;
+      pointer-events: none;
+    }
+
+    .cover::after {
+      content: "";
+      position: absolute;
+      right: -86px;
+      bottom: -112px;
+      width: 310px;
+      height: 310px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 50%;
+    }
+
+    .cover-kicker {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .18em;
+      opacity: .92;
+    }
+
+    .cover-kicker::before {
+      content: "";
+      width: 42px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .cover h2 {
+      position: relative;
+      z-index: 1;
+      margin: 30px 0 18px;
+      color: #fff;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.04;
+      letter-spacing: -.055em;
+      max-width: 760px;
+    }
+
+    .cover-sub {
+      position: relative;
+      z-index: 1;
+      max-width: 620px;
+      line-height: 1.75;
+      opacity: .9;
+      font-size: 16px;
+    }
+
+    .article-body {
+      background: var(--panel-strong);
+      border: 1px solid var(--paper-line);
+      border-radius: 32px;
+      box-shadow: var(--paper-shadow);
+      padding: 32px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: #f0e3cf;
+      color: #5c4e3d;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .tag::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .section {
+      margin: 32px 0;
+      padding-top: 6px;
+    }
+
+    .section h3, .article-body > h3 {
+      font-size: 25px;
+      line-height: 1.25;
+      margin: 0 0 15px;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      letter-spacing: -.025em;
+    }
+
+    .section p {
+      margin: 12px 0;
+      font-size: 17px;
+      line-height: 1.96;
+      color: #2b251e;
+    }
+
+    .quote {
+      margin: 26px 0;
+      padding: 20px 22px;
+      border-left: 5px solid var(--accent);
+      background: linear-gradient(135deg, #fff1df, #f6ead8);
+      border-radius: 0 20px 20px 0;
+      font-size: 18px;
+      line-height: 1.75;
+      font-weight: 1000;
+      color: #2c2117;
+    }
+
+    .image-block {
+      margin: 26px 0;
+      border-radius: 26px;
+      overflow: hidden;
+      background: #efe1cd;
+      border: 1px solid var(--paper-line);
+      box-shadow: 0 18px 34px rgba(31, 26, 20, .08);
+    }
+
+    .image-visual {
+      min-height: 196px;
+      display: grid;
+      place-items: center;
+      gap: 12px;
+      padding: 28px;
+      text-align: center;
+      color: #fff;
+      font-weight: 1000;
+      font-size: 30px;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      background: var(--visual);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .image-visual span,
+    .image-visual small {
+      position: relative;
+      z-index: 1;
+    }
+
+    .image-visual small {
+      max-width: 680px;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      font-weight: 700;
+      opacity: .86;
+    }
+
+    .image-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: linear-gradient(135deg, rgba(0,0,0,.7), transparent 76%);
+    }
+
+    .image-caption {
+      padding: 14px 17px;
+      color: var(--muted-warm);
+      font-size: 13px;
+      line-height: 1.65;
+      background: #fffaf2;
+    }
+
+    .title-options {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0 26px;
+    }
+
+    .title-option {
+      padding: 13px 15px;
+      border-radius: 18px;
+      border: 1px solid var(--paper-line);
+      background: #fffaf2;
+      font-weight: 900;
+      line-height: 1.5;
+      color: #2a2118;
+    }
+
+    .prompt-box {
+      margin-top: 30px;
+      padding: 18px;
+      border-radius: 22px;
+      background: #eaf4ee;
+      color: #2d5144;
+      line-height: 1.75;
+      font-size: 14px;
+      white-space: pre-wrap;
+      border: 1px solid #cfe2d7;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      background: #fff8ea;
+      color: #17120d;
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      transition: .18s ease;
+      z-index: 20;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .diagnostic-box {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #fff8ea;
+      color: #21180f;
+      border: 1px solid #e3d5bf;
+      line-height: 1.7;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes article-in {
+      from { opacity: 0; transform: translateY(12px) scale(.992); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(143, 240, 194, .55); }
+      70% { box-shadow: 0 0 0 12px rgba(143, 240, 194, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(143, 240, 194, 0); }
+    }
+
+    @media (max-width: 1080px) {
+      .hero, .workspace { grid-template-columns: 1fr; }
+      .control-panel { position: static; }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell { width: min(100vw - 24px, 1440px); padding-top: 18px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .hero-main, .process-card, .control-panel, .result-panel { border-radius: 22px; }
+      .hero-main, .process-card, .control-panel, #result { padding: 20px; }
+      .grid-2, .buttons { grid-template-columns: 1fr; }
+      .cover { padding: 24px; min-height: 340px; border-radius: 24px; }
+      .article-body { padding: 22px; border-radius: 24px; }
+      .toolbar { position: static; }
+      .toolbar .actions { width: 100%; }
+      .toolbar button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark">文</span><span>ARTICLE STUDIO</span></div>
+      <div class="system-pill"><span class="pulse"></span><span>本地运行 · 无需接口 · 单文件 HTML</span></div>
+    </div>
+
+    <header class="hero">
+      <section class="hero-main">
+        <div class="eyebrow">Local Content Workbench</div>
+        <h1>教育现实评论图文生成器</h1>
+        <p class="hero-copy">输入一个选题和少量关键信息，生成“现实痛点 + 家长视角 + 口语化拆解”的图文内容：标题候选、封面文案、正文、配图提示和发布摘要。</p>
+        <div class="hero-stats">
+          <span class="hero-chip">强冲突标题</span>
+          <span class="hero-chip">公众号式预览</span>
+          <span class="hero-chip">配图提示词</span>
+          <span class="hero-chip">一键复制</span>
+        </div>
+      </section>
+
+      <aside class="process-card">
+        <h2>生成链路</h2>
+        <div class="steps">
+          <div class="step"><span class="num">01</span><span>选题：普通人高度关心的现实痛点</span></div>
+          <div class="step"><span class="num">02</span><span>标题：强冲突 + 强情绪 + 明确人群</span></div>
+          <div class="step"><span class="num">03</span><span>开头：具体场景、对话或数字反差</span></div>
+          <div class="step"><span class="num">04</span><span>主体：个案、现象、原因、建议</span></div>
+          <div class="step"><span class="num">05</span><span>结尾：温情、劝诫或反问收束</span></div>
+        </div>
+      </aside>
+    </header>
+
+    <main class="workspace">
+      <section class="control-panel">
+        <div class="panel-head">
+          <h2>输入控制台</h2>
+          <div class="system-pill">5 项信息</div>
+        </div>
+        <p class="panel-note">尽量把主题写成“人群 + 冲突 + 现实问题”，生成效果会更接近教育现实评论。</p>
+
+        <div class="field-group">
+          <div class="settings-entry">
+            <div>
+              <strong>API 设置</strong>
+              <span>文本模型、图片模型、Key 和生图参数已移到二级页面配置。</span>
+            </div>
+            <button class="secondary" id="openApiSettings" type="button">打开设置</button>
+          </div>
+
+          <div>
+            <label for="topic">选题主题</label>
+            <input id="topic" placeholder="例如：县城家长花 5 万给孩子报研学，到底值不值？" />
+            <div class="hint">必填。尽量包含人群、冲突或具体事件。</div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="audience">目标读者</label>
+              <select id="audience">
+                <option>家长</option>
+                <option>学生</option>
+                <option>老师</option>
+                <option>考公/考编人</option>
+                <option>泛大众</option>
+              </select>
+            </div>
+            <div>
+              <label for="stance">文章立场</label>
+              <select id="stance">
+                <option>共情家长</option>
+                <option>提醒学生</option>
+                <option>共情老师</option>
+                <option>政策人话版解读</option>
+                <option>理性避坑</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="facts">关键信息/素材</label>
+            <textarea id="facts" placeholder="例如：研学 7 天 49800 元；家长群很多人在报名；孩子刚上初一；机构强调名校路线和证书。"></textarea>
+            <div class="hint">选填。可以写数据、分数、费用、地区、政策、新闻事件、真实案例。</div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="tone">语气强度</label>
+              <select id="tone">
+                <option value="balanced">现实但温和</option>
+                <option value="sharp">犀利一点</option>
+                <option value="warm">温情一点</option>
+              </select>
+            </div>
+            <div>
+              <label for="length">篇幅</label>
+              <select id="length">
+                <option value="medium">中等：约 1200 字</option>
+                <option value="short">短文：约 800 字</option>
+                <option value="long">长文：约 1800 字</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="imageStyle">配图方向</label>
+            <select id="imageStyle">
+              <option>家长群聊天/教育消费场景</option>
+              <option>课堂/办公室/教师工作场景</option>
+              <option>考试分数/志愿填报/电脑屏幕</option>
+              <option>城市家庭/书桌/孩子背影</option>
+              <option>政策文件/数据图表/新闻感</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button id="generate">生成图文内容</button>
+          <button class="secondary" id="sample">填入示例</button>
+        </div>
+      </section>
+
+      <section class="result-panel">
+        <div class="toolbar">
+          <div class="status"><span class="dot"></span><span id="statusText">等待输入</span></div>
+          <div class="actions">
+            <button class="secondary" id="testQwenImage">测试图片接口</button>
+            <button class="secondary" id="generateImages">生成配图</button>
+            <button class="secondary" id="humanize">去 AI 味优化</button>
+            <button class="secondary" id="copyText">复制正文</button>
+            <button class="secondary" id="copyAll">复制全部</button>
+            <button class="secondary" id="saveLocal">保存到本地</button>
+            <button class="secondary" id="download">下载 HTML</button>
+          </div>
+        </div>
+        <div id="result">
+          <div class="empty">
+            <div>
+              <div class="empty-icon">✦</div>
+              <h2>等待生成第一篇内容</h2>
+              <p>填写左侧信息后，点击“生成图文内容”。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="settings-modal" id="apiSettingsModal" aria-hidden="true">
+    <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="apiSettingsTitle">
+      <div class="panel-head">
+        <h2 id="apiSettingsTitle">API 设置</h2>
+        <button class="secondary" id="closeApiSettings" type="button">关闭</button>
+      </div>
+      <p class="panel-note">这里集中配置文本 API 和图片 API。Key 只会发送给本机 server.js，不会写入 HTML 文件。</p>
+
+      <div class="settings-section">
+        <h3>文本 API</h3>
+        <div class="field-group">
+          <div class="grid-2">
+            <div>
+              <label for="textProvider">服务商</label>
+              <select id="textProvider">
+                <option value="deepseek">DeepSeek 官方</option>
+                <option value="custom">自定义 / 中转站（OpenAI 兼容）</option>
+              </select>
+            </div>
+            <div>
+              <label for="rememberKey">记住文本 Key</label>
+              <select id="rememberKey">
+                <option value="no">不保存</option>
+                <option value="yes">保存在本浏览器</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="apiKey">文本 API Key</label>
+            <input id="apiKey" type="password" placeholder="粘贴文本模型 API Key" autocomplete="off" />
+            <div class="hint">用于生成文章和去 AI 味优化。自定义/中转站需填写对应平台 Key。</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="model">模型名</label>
+              <input id="model" list="textModelOptions" placeholder="例如 deepseek-chat / gpt-4o-mini" />
+              <datalist id="textModelOptions">
+                <option value="deepseek-chat"></option>
+                <option value="deepseek-reasoner"></option>
+                <option value="gpt-4o-mini"></option>
+                <option value="gpt-4.1-mini"></option>
+              </datalist>
+            </div>
+            <div>
+              <label for="apiBaseUrl">Base URL</label>
+              <input id="apiBaseUrl" placeholder="https://api.deepseek.com" />
+            </div>
+          </div>
+          <div class="hint">Base URL 可填根地址或完整 /chat/completions 地址；后端会按 OpenAI 兼容格式调用。</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>图片 API</h3>
+        <div class="field-group">
+          <div class="grid-2">
+            <div>
+              <label for="imageProvider">服务商</label>
+              <select id="imageProvider">
+                <option value="dashscope">通义 / 百炼官方</option>
+                <option value="custom">自定义 / 中转站（OpenAI 兼容）</option>
+              </select>
+            </div>
+            <div>
+              <label for="rememberImageKey">记住图片 Key</label>
+              <select id="rememberImageKey">
+                <option value="no">不保存</option>
+                <option value="yes">保存在本浏览器</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="qwenImageApiKey">图片 API Key</label>
+            <input id="qwenImageApiKey" type="password" placeholder="粘贴图片模型 API Key" autocomplete="off" />
+            <div class="hint">用于生成配图。自定义/中转站需填写对应平台 Key。</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="qwenImageModel">图片模型</label>
+              <input id="qwenImageModel" list="imageModelOptions" placeholder="例如 qwen-image-2.0-pro / dall-e-3" />
+              <datalist id="imageModelOptions">
+                <option value="qwen-image-2.0-pro"></option>
+                <option value="qwen-image-2.0"></option>
+                <option value="wan2.6-t2i"></option>
+                <option value="dall-e-3"></option>
+                <option value="gpt-image-1"></option>
+              </datalist>
+            </div>
+            <div>
+              <label for="autoImages">配图方式</label>
+              <select id="autoImages">
+                <option value="no">本地封面 + 提示词，推荐</option>
+                <option value="yes">自动尝试当前图片模型生图</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="imageProtocol">图片协议</label>
+              <select id="imageProtocol">
+                <option value="qwen-multimodal">Qwen 多模态接口，推荐</option>
+                <option value="dashscope">DashScope 旧版生图接口</option>
+                <option value="openai-compatible">OpenAI 兼容接口</option>
+              </select>
+            </div>
+            <div>
+              <label for="imageBaseUrl">Base URL</label>
+              <input id="imageBaseUrl" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="imageSize">图片尺寸</label>
+              <select id="imageSize">
+                <option value="1280*720">横图 1280*720</option>
+                <option value="1024*1024">方图 1024*1024</option>
+                <option value="720*1280">竖图 720*1280</option>
+              </select>
+            </div>
+            <div>
+              <label for="imageCount">图片数量</label>
+              <select id="imageCount">
+                <option value="1">1 张封面图，推荐</option>
+                <option value="2">2 张图</option>
+                <option value="3">3 张图</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">自定义/中转站模式按 OpenAI 兼容图片接口调用，Base URL 可填根地址或完整 /images/generations 地址。</div>
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <button class="secondary" id="doneApiSettings" type="button">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制</div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let lastPlainText = "";
+    let lastArticleText = "";
+
+    const titlePatterns = [
+      (x) => `${x.main}：这届${x.audience}的焦虑，藏不住了`,
+      (x) => `同样是${x.coreNoun}，凭什么有人轻松上岸，有人越走越难？`,
+      (x) => `求求了，别再只看${x.coreNoun}表面：真正该算的是这笔账`,
+      (x) => `${x.contrast}，终于让人看懂了一个现实`,
+      (x) => `一个${x.coreNoun}，撕开了多少普通家庭的焦虑`
+    ];
+
+    const gradients = [
+      "linear-gradient(135deg, #ff7a45 0%, #1d6b5b 100%)",
+      "linear-gradient(135deg, #16202a 0%, #c06b3e 100%)",
+      "linear-gradient(135deg, #5b3d2e 0%, #f0bd55 100%)",
+      "linear-gradient(135deg, #123e36 0%, #68a8ff 100%)"
+    ];
+
+    function clean(value, fallback = "") {
+      return (value || "").trim() || fallback;
+    }
+
+    function inferCore(topic) {
+      const compact = topic.replace(/[，。！？：:；;、“”‘’]/g, " ").trim();
+      const parts = compact.split(/\s+/).filter(Boolean);
+      const main = topic.length > 28 ? topic.slice(0, 28) + "…" : topic;
+      let coreNoun = "这件事";
+      const keys = ["考研", "考公", "教师编", "教师", "研学", "留学", "高考", "志愿", "专业", "生活费", "夏令营", "补课", "博士", "文科生", "随迁子女"];
+      for (const key of keys) {
+        if (topic.includes(key)) { coreNoun = key; break; }
+      }
+      const contrast = topic.includes("万") || topic.includes("块") || topic.includes("元")
+        ? "一边嫌贵，一边咬牙付款"
+        : topic.includes("分")
+          ? "高分陪跑，低分上岸"
+          : topic.includes("老师") || topic.includes("教师")
+            ? "想管不敢管，想退退不下"
+            : "看起来是选择，背后全是现实";
+      return { main, coreNoun, contrast, firstWord: parts[0] || topic, audience: clean($("audience").value, "家长") };
+    }
+
+    function splitFacts(facts) {
+      return facts
+        .split(/[\n；;。]/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .slice(0, 6);
+    }
+
+    function sentenceByTone(tone, balanced, sharp, warm) {
+      if (tone === "sharp") return sharp;
+      if (tone === "warm") return warm;
+      return balanced;
+    }
+
+    function paragraphsForLength(length) {
+      if (length === "short") return { intro: 3, section: 3 };
+      if (length === "long") return { intro: 5, section: 6 };
+      return { intro: 4, section: 4 };
+    }
+
+    function makeOpening(topic, audience, stance, facts, tone, length) {
+      const n = paragraphsForLength(length).intro;
+      const fact = facts[0] || "身边不止一个人提到过类似的困惑";
+      const p = [
+        `前两天，看到一个关于“${topic}”的讨论，评论区里很多${audience}都沉默了。`,
+        `最扎心的不是这件事本身，而是它太像普通家庭每天都在面对的选择。`,
+        `有人说，${fact}。这句话听起来只是一个细节，可放到现实里，背后全是压力。`,
+        sentenceByTone(tone,
+          `所以这篇文章不想讲大道理，只想把这笔账摊开说清楚。`,
+          `如果到现在还只把它当成个别现象，那可能真的低估了这几年教育规则的变化。`,
+          `很多时候，大家不是不理性，只是站在孩子面前，很难真的做到完全不焦虑。`
+        ),
+        `因为对普通人来说，真正难的从来不是做选择，而是每一个选择都不便宜。`
+      ];
+      return p.slice(0, n);
+    }
+
+    function makeSectionOne(topic, audience, facts, tone, length) {
+      const n = paragraphsForLength(length).section;
+      const factText = facts.length ? `比如：${facts.slice(0, 3).join("；")}。` : `比如一个家长说，自己并不是非要跟风，只是看到别人都在往前跑，心里很难不慌。`;
+      const p = [
+        `先别急着判断“值不值”，我们先看一个普通${audience}真正纠结的地方。`,
+        factText,
+        `这些信息单独看，好像都不算什么。可放在一个家庭的账本里，就不是一笔小钱，也不是一次轻飘飘的决定。`,
+        sentenceByTone(tone,
+          `最让人难受的，是很多人明明已经很努力地规划了，却还是怕自己少看一步、慢走一步。`,
+          `最现实的地方在于，很多焦虑不是被机构制造出来的，而是被差距、信息和不确定性一点点推出来的。`,
+          `很多父母嘴上说“顺其自然”，可真轮到自己孩子身上，又怎么可能完全放下。`
+        ),
+        `表面看，这是一个关于“${topic}”的选择；往深里看，其实是普通家庭对未来不确定性的提前买单。`,
+        `这也是为什么，同样一件事，有人觉得太夸张，有人却觉得不做不安心。`
+      ];
+      return p.slice(0, n);
+    }
+
+    function makeSectionTwo(topic, audience, stance, tone, length) {
+      const n = paragraphsForLength(length).section;
+      const p = [
+        `你以为这只是一个家庭的纠结，其实这几年，类似的场景越来越常见。`,
+        `家长群里有人晒安排，有人晒投入，有人晒结果，也有人什么都不说，但心里已经开始默默比较。`,
+        `过去大家觉得，只要孩子踏实努力，路总不会太差。现在很多人发现，努力当然重要，可信息、选择、资源和家庭托底能力，也在悄悄拉开差距。`,
+        sentenceByTone(tone,
+          `这不是某个${audience}突然变焦虑，而是整套竞争环境变得更细、更早，也更贵了。`,
+          `说得直白一点，不是大家突然爱折腾，而是不折腾的人，越来越怕自己被甩下。`,
+          `这份焦虑背后，其实藏着很多普通家庭不愿说出口的担心：怕孩子辛苦，怕孩子落后，更怕自己帮不上忙。`
+        ),
+        `所以，讨论“${topic}”，不能只讨论这一件事本身，还要看它为什么会在这个时候被这么多人关注。`,
+        `真正变化的，不是某一个选择，而是普通家庭对教育回报的安全感变弱了。`
+      ];
+      return p.slice(0, n);
+    }
+
+    function reasonsByTopic(topic) {
+      if (topic.includes("老师") || topic.includes("教师") || topic.includes("班主任")) {
+        return ["第一，家校边界越来越模糊，老师做得少怕失职，做得多又怕越界。", "第二，投诉和舆论的成本太低，正常管理反而需要老师承担更高风险。", "第三，学校如果不能按事实给老师兜底，最后就会变成谁都不敢管。"];
+      }
+      if (topic.includes("考公") || topic.includes("考编") || topic.includes("上岸")) {
+        return ["第一，岗位冷热差距太大，分数不再是唯一决定因素。", "第二，信息差越来越值钱，会选岗的人有时比只会刷题的人更占便宜。", "第三，就业压力把更多人推到同一条路上，普通人的容错率自然变低。"];
+      }
+      if (topic.includes("留学") || topic.includes("海归")) {
+        return ["第一，留学的投入越来越高，但学历光环没有过去那么亮了。", "第二，企业更看重真实能力和岗位匹配，不再只为一纸文凭买单。", "第三，家庭在做决定前，必须把最坏回报也算进去。"];
+      }
+      if (topic.includes("专业") || topic.includes("文科") || topic.includes("志愿")) {
+        return ["第一，很多专业听起来体面，但出口并没有想象中宽。", "第二，行业周期变快，四年前的热门，毕业时可能已经换了一副面孔。", "第三，普通家庭选专业，不能只看名字好不好听，更要看就业路径清不清楚。"];
+      }
+      return ["第一，规则变了。过去很多选择靠经验就够了，现在必须看趋势、看出口、看真实回报。", "第二，成本高了。不管是时间、金钱还是精力，普通家庭都很难把一次试错当成小事。", "第三，容错率低了。越是普通家庭，越不能只凭情绪做决定，因为每一步都牵动后面的路。"];
+    }
+
+    function makeSectionThree(topic, tone, length) {
+      const reasons = reasonsByTopic(topic);
+      const extra = length === "long" ? [
+        sentenceByTone(tone,
+          `这些变化合在一起，就会让很多原本看起来正常的选择，变得越来越像一场提前下注。`,
+          `更扎心的是，很多人并不是不知道风险，而是知道风险之后，依然觉得自己没有更好的办法。`,
+          `理解这一点，才知道为什么很多家庭看似在卷，实际上是在给孩子多留一点可能性。`
+        ),
+        `所以问题不在于某个选择一定对或一定错，而在于你有没有把它背后的代价想清楚。`
+      ] : [];
+      return [...reasons, ...extra];
+    }
+
+    function makeSectionFour(topic, audience, stance, tone, length) {
+      const n = paragraphsForLength(length).section;
+      const p = [
+        `那普通${audience}到底该怎么办？我的建议是，先别被情绪推着走。`,
+        `第一，看出口。别只看入口有多热、宣传有多好听，要看它最后能不能真的帮到孩子或自己。`,
+        `第二，算成本。钱是一部分，时间、精力、机会成本，也是账本里必须写进去的东西。`,
+        `第三，留退路。任何选择只要让家庭完全没有退路，就要慎重再慎重。`,
+        sentenceByTone(tone,
+          `如果只是为了一个好听的名头，真的没必要把全家都压上去。`,
+          `说白了，普通家庭最怕的不是不投入，而是花了大价钱，最后买到的只是心理安慰。`,
+          `真正稳妥的选择，不是完全不焦虑，而是在焦虑里仍然保留一点清醒。`
+        ),
+        `真要走这条路，就别只靠热情，要靠规划；别只听别人说值不值，要看自己家扛不扛得住。`
+      ];
+      return p.slice(0, n);
+    }
+
+    function makeEnding(topic, audience, tone) {
+      return sentenceByTone(tone,
+        `所以，别只盯着“${topic}”表面那个看起来体面的结果。真正该看的，是这条路走到最后，孩子有没有退路，家庭扛不扛得住。`,
+        `说到底，普通${audience}最需要的不是被继续催着往前冲，而是有人把这笔账讲明白：哪些钱值得花，哪些坑必须躲，哪些选择不能只凭一口气。`,
+        `很多${audience}不是不舍得付出，只是希望每一分付出，都别只换来一场更大的焦虑。`
+      );
+    }
+
+    function makeImagePrompts(topic, imageStyle, facts) {
+      const base = [
+        `封面图：${imageStyle}，暖色现实主义，自媒体封面构图，画面中有留白可放标题，情绪克制但有压力感，主题“${topic}”。`,
+        `正文配图 1：一个普通家庭围坐在餐桌或书桌前讨论教育选择，手机屏幕/资料/账单作为细节，纪实摄影风。`,
+        `正文配图 2：抽象信息图，展示“成本、选择、出口、退路”四个关键词，米色背景，红绿双色重点标注。`
+      ];
+      if (facts.length) base.push(`素材提示：画面细节可参考这些信息：${facts.join("；")}。`);
+      return base;
+    }
+
+    function renderParagraphs(paragraphs) {
+      const highlightIndexes = getKeySentenceIndexes(paragraphs);
+      return paragraphs.map((p, index) => `<p>${renderParagraphWithKeySentence(p, highlightIndexes.has(index))}</p>`).join("\n");
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"]/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[s]));
+    }
+
+    function splitSentences(text) {
+      return String(text || "").match(/[^。！？!?；;]+[。！？!?；;]?/g)?.map((sentence) => sentence.trim()).filter(Boolean) || [];
+    }
+
+    function keySentenceScore(sentence) {
+      let score = Math.min(sentence.length, 80) / 12;
+      if (/[0-9０-９万千%％年月天元块分]/.test(sentence)) score += 6;
+      if (/不是|而是|真正|关键|问题|现实|成本|选择|规则|焦虑|压力|普通人|家长|孩子|学校|老师|机构|证书|报名/.test(sentence)) score += 4;
+      if (/所以|但|可是|最后|其实|说白了|换句话说|最怕|最难|最该/.test(sentence)) score += 3;
+      if (sentence.length < 14 || sentence.length > 90) score -= 3;
+      return score;
+    }
+
+    function getKeySentenceIndexes(paragraphs) {
+      const candidates = paragraphs
+        .map((paragraph, index) => ({ index, sentence: splitSentences(paragraph).sort((a, b) => keySentenceScore(b) - keySentenceScore(a))[0] || paragraph }))
+        .filter((item) => item.sentence && item.sentence.length >= 14)
+        .map((item) => ({ ...item, score: keySentenceScore(item.sentence) }))
+        .sort((a, b) => b.score - a.score);
+      const count = Math.max(1, Math.round(paragraphs.length * 0.12));
+      return new Set(candidates.slice(0, count).map((item) => item.index));
+    }
+
+    function renderParagraphWithKeySentence(paragraph, shouldHighlight) {
+      if (!shouldHighlight) return escapeHtml(paragraph);
+      const sentences = splitSentences(paragraph);
+      if (!sentences.length) return escapeHtml(paragraph);
+      const keySentence = sentences.sort((a, b) => keySentenceScore(b) - keySentenceScore(a))[0];
+      const index = paragraph.indexOf(keySentence);
+      if (index === -1) return escapeHtml(paragraph);
+      return `${escapeHtml(paragraph.slice(0, index))}<strong>${escapeHtml(keySentence)}</strong>${escapeHtml(paragraph.slice(index + keySentence.length))}`;
+    }
+
+    function buildPlain(article) {
+      return [
+        `标题：${article.title}`,
+        "",
+        "标题候选：",
+        ...article.titles.map((t, i) => `${i + 1}. ${t}`),
+        "",
+        "封面文案：",
+        article.coverSub,
+        "",
+        "正文：",
+        ...article.sections.flatMap(s => [s.heading, ...s.paragraphs, ""]),
+        "结尾：",
+        article.ending,
+        "",
+        "配图提示：",
+        ...article.imagePrompts.map((p, i) => `${i + 1}. ${p}`),
+        "",
+        "发布摘要：",
+        article.summary
+      ].join("\n");
+    }
+
+    function buildArticleText(article) {
+      return [
+        article.title,
+        "",
+        ...article.sections.flatMap(s => [s.heading, ...s.paragraphs, ""]),
+        article.ending
+      ].join("\n");
+    }
+
+    function getApiEndpoint(path) {
+      return window.location.protocol === "file:" ? `http://localhost:8787${path}` : path;
+    }
+
+    function getDeepSeekEndpoint() {
+      return getApiEndpoint("/api/generate");
+    }
+
+    function getHumanizeEndpoint() {
+      return getApiEndpoint("/api/humanize");
+    }
+
+    function getImagesEndpoint() {
+      return getApiEndpoint("/api/generate-images");
+    }
+
+    function getTestQwenImageEndpoint() {
+      return getApiEndpoint("/api/test-qwen-image");
+    }
+
+    function getSaveArticleEndpoint() {
+      return getApiEndpoint("/api/save-article");
+    }
+
+    function extractMarkdownSection(text, heading) {
+      const pattern = new RegExp(`(^|\\n)## ${heading}\\n([\\s\\S]*?)(?=\\n## |$)`);
+      const match = text.match(pattern);
+      return match ? match[2].trim() : "";
+    }
+
+    function extractAiTitle(text, fallback) {
+      const sectionTitle = extractMarkdownSection(text, "标题");
+      if (sectionTitle) return sectionTitle.split("\n").find(Boolean) || fallback;
+      const lines = String(text || "").split("\n").map((line) => line.trim());
+      const hashIndex = lines.findIndex((line) => /^#\s+/.test(line));
+      if (hashIndex !== -1) {
+        const hashTitle = lines[hashIndex].replace(/^#\s+/, "").trim();
+        if (hashTitle && hashTitle !== "标题") return hashTitle;
+        const nextLine = lines.slice(hashIndex + 1).find((line) => line && !line.startsWith("#"));
+        if (nextLine) return nextLine;
+      }
+      return fallback;
+    }
+
+    function markdownToHtml(text) {
+      const lines = String(text || "").split("\n");
+      const paragraphEntries = [];
+      let currentHeading = "";
+      lines.forEach((line) => {
+        const value = line.trim();
+        if (value.startsWith("#")) currentHeading = value.replace(/^#{1,3}\s*/, "").trim();
+        const isBodyParagraph = value
+          && !value.startsWith("#")
+          && !/^\d+[\.、]\s*/.test(value)
+          && !["标题", "标题候选", "封面文案", "配图提示", "配图提示词", "发布摘要"].includes(currentHeading);
+        if (isBodyParagraph) paragraphEntries.push(value);
+      });
+      const highlightTexts = new Set([...getKeySentenceIndexes(paragraphEntries)].map((index) => paragraphEntries[index]));
+      currentHeading = "";
+
+      return lines
+        .map((line) => {
+          const value = line.trim();
+          if (!value) return "";
+          if (value.startsWith("### ")) {
+            currentHeading = value.slice(4).trim();
+            return `<section class="section"><h3>${escapeHtml(currentHeading)}</h3></section>`;
+          }
+          if (value.startsWith("## ")) {
+            currentHeading = value.slice(3).trim();
+            return `<section class="section"><h3>${escapeHtml(currentHeading)}</h3></section>`;
+          }
+          if (value.startsWith("# ")) {
+            currentHeading = value.slice(2).trim();
+            return `<section class="section"><h3>${escapeHtml(currentHeading)}</h3></section>`;
+          }
+          if (/^\d+[\.、]\s*/.test(value)) return `<div class="title-option">${escapeHtml(value)}</div>`;
+          if (currentHeading === "标题") return "";
+          const shouldHighlight = highlightTexts.has(value) && !["标题候选", "封面文案", "配图提示", "配图提示词", "发布摘要"].includes(currentHeading);
+          return `<p>${renderParagraphWithKeySentence(value, shouldHighlight)}</p>`;
+        })
+        .join("\n");
+    }
+
+    function renderAiResult(text, payload) {
+      const gradient = gradients[Math.abs(payload.topic.length + payload.facts.length) % gradients.length];
+      const title = extractAiTitle(text, payload.topic);
+      const coverSub = extractMarkdownSection(text, "封面文案") || `${payload.stance}｜DeepSeek 生成，已按教育现实评论范式组织。`;
+      $("result").innerHTML = `
+        <article class="article">
+          <div class="cover" style="--cover:${gradient}">
+            <div class="cover-kicker">DeepSeek AI 生成</div>
+            <div>
+              <h2>${escapeHtml(title)}</h2>
+              <div class="cover-sub">${escapeHtml(coverSub)}</div>
+            </div>
+          </div>
+
+          <div class="article-body">
+            <div class="meta">
+              <span class="tag">读者：${escapeHtml(payload.audience)}</span>
+              <span class="tag">立场：${escapeHtml(payload.stance)}</span>
+              <span class="tag">模型：DeepSeek</span>
+            </div>
+            <div class="ai-markdown">
+              ${markdownToHtml(text)}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function loadSavedApiSettings() {
+      const savedKey = localStorage.getItem("deepseek_api_key") || "";
+      const savedTextProvider = localStorage.getItem("text_provider") || "deepseek";
+      const rawSavedModel = localStorage.getItem("deepseek_model");
+      const savedModel = rawSavedModel || (savedTextProvider === "custom" ? "" : "deepseek-chat");
+      const savedApiBaseUrl = localStorage.getItem("text_api_base_url") || (savedTextProvider === "custom" ? "" : "https://api.deepseek.com");
+      const savedImageKey = localStorage.getItem("qwen_image_api_key") || "";
+      const savedImageProvider = localStorage.getItem("qwen_image_provider") || "dashscope";
+      const rawSavedImageModel = localStorage.getItem("qwen_image_model");
+      const savedImageModel = rawSavedImageModel || (savedImageProvider === "custom" ? "" : "qwen-image-2.0-pro");
+      const savedImageSize = localStorage.getItem("qwen_image_size") || "1280*720";
+      const savedImageCount = localStorage.getItem("qwen_image_count") || "1";
+      const savedImageProtocol = localStorage.getItem("qwen_image_protocol") || (savedImageProvider === "custom" ? "openai-compatible" : "qwen-multimodal");
+      const savedImageBaseUrl = localStorage.getItem("qwen_image_base_url") || (savedImageProvider === "custom" ? "" : "https://dashscope.aliyuncs.com/compatible-mode/v1");
+      if (savedKey) {
+        $("apiKey").value = savedKey;
+        $("rememberKey").value = "yes";
+      }
+      if (savedImageKey) {
+        $("qwenImageApiKey").value = savedImageKey;
+        $("rememberImageKey").value = "yes";
+      }
+      $("model").value = savedModel;
+      $("textProvider").value = savedTextProvider;
+      $("apiBaseUrl").value = savedApiBaseUrl;
+      $("imageProvider").value = savedImageProvider;
+      $("qwenImageModel").value = savedImageModel;
+      $("imageProtocol").value = savedImageProtocol;
+      $("imageBaseUrl").value = savedImageBaseUrl;
+      $("imageSize").value = savedImageSize;
+      $("imageCount").value = savedImageCount;
+    }
+
+    function saveApiSettings(payload) {
+      localStorage.setItem("deepseek_model", payload.model);
+      localStorage.setItem("text_provider", payload.textProvider);
+      localStorage.setItem("text_api_base_url", payload.apiBaseUrl);
+      if ($("rememberKey").value === "yes") {
+        localStorage.setItem("deepseek_api_key", payload.apiKey);
+      } else {
+        localStorage.removeItem("deepseek_api_key");
+      }
+    }
+
+    function saveImageApiSettings(payload) {
+      localStorage.setItem("qwen_image_provider", payload.imageProvider);
+      localStorage.setItem("qwen_image_model", payload.qwenImageModel);
+      localStorage.setItem("qwen_image_protocol", payload.imageProtocol);
+      localStorage.setItem("qwen_image_base_url", payload.imageBaseUrl);
+      localStorage.setItem("qwen_image_size", payload.imageSize);
+      localStorage.setItem("qwen_image_count", String(payload.imageCount));
+      if ($("rememberImageKey").value === "yes") {
+        localStorage.setItem("qwen_image_api_key", payload.qwenImageApiKey);
+      } else {
+        localStorage.removeItem("qwen_image_api_key");
+      }
+    }
+
+    function getApiPayloadBase() {
+      const apiKey = clean($("apiKey").value);
+      if (!apiKey) {
+        showToast("请先填写文本 API Key");
+        openApiSettings();
+        $("apiKey").focus();
+        return null;
+      }
+      const textProvider = clean($("textProvider").value, "deepseek");
+      const model = clean($("model").value, textProvider === "deepseek" ? "deepseek-chat" : "");
+      if (!model) {
+        showToast("请先填写文本模型名");
+        openApiSettings();
+        $("model").focus();
+        return null;
+      }
+      const apiBaseUrl = clean($("apiBaseUrl").value, textProvider === "deepseek" ? "https://api.deepseek.com" : "");
+      if (!apiBaseUrl) {
+        showToast("请先填写文本 API Base URL");
+        openApiSettings();
+        $("apiBaseUrl").focus();
+        return null;
+      }
+      const payload = {
+        apiKey,
+        model,
+        textProvider,
+        apiBaseUrl,
+      };
+      saveApiSettings(payload);
+      return payload;
+    }
+
+    function getImagePayloadBase({ required = false } = {}) {
+      const qwenImageApiKey = clean($("qwenImageApiKey").value);
+      if (required && !qwenImageApiKey) {
+        showToast("请先填写图片 API Key");
+        $("qwenImageApiKey").focus();
+        return null;
+      }
+      const imageProvider = clean($("imageProvider").value, "dashscope");
+      const qwenImageModel = clean($("qwenImageModel").value, imageProvider === "custom" ? "" : "qwen-image-2.0-pro");
+      if (required && !qwenImageModel) {
+        showToast("请先填写图片模型名");
+        openApiSettings();
+        $("qwenImageModel").focus();
+        return null;
+      }
+      const imageBaseUrl = clean($("imageBaseUrl").value, imageProvider === "custom" ? "" : "https://dashscope.aliyuncs.com/compatible-mode/v1");
+      if (required && imageProvider === "custom" && !imageBaseUrl) {
+        showToast("请先填写图片 API Base URL");
+        openApiSettings();
+        $("imageBaseUrl").focus();
+        return null;
+      }
+      const payload = {
+        qwenImageApiKey,
+        imageProvider,
+        qwenImageModel,
+        imageProtocol: imageProvider === "custom" ? "openai-compatible" : clean($("imageProtocol").value, "qwen-multimodal"),
+        imageBaseUrl,
+        imageSize: clean($("imageSize").value, "1280*720"),
+        imageCount: Number($("imageCount").value || 1),
+      };
+      saveImageApiSettings(payload);
+      return payload;
+    }
+
+    async function humanizeCurrentText() {
+      if (!lastPlainText) {
+        showToast("请先生成文章");
+        return;
+      }
+
+      const basePayload = getApiPayloadBase();
+      if (!basePayload) return;
+
+      const humanizeButton = $("humanize");
+      humanizeButton.disabled = true;
+      humanizeButton.textContent = "优化中...";
+      $("statusText").textContent = "正在去 AI 味优化...";
+
+      try {
+        const response = await fetch(getHumanizeEndpoint(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...basePayload, text: lastPlainText }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "去 AI 味失败");
+
+        lastPlainText = data.text || "";
+        lastArticleText = data.text || "";
+        renderHumanizedResult(lastPlainText, basePayload);
+        $("statusText").textContent = `${data.model || basePayload.model} 已完成去 AI 味优化`;
+      } catch (error) {
+        $("statusText").textContent = "去 AI 味失败";
+        showToast(error.message || "去 AI 味失败");
+      } finally {
+        humanizeButton.disabled = false;
+        humanizeButton.textContent = "去 AI 味优化";
+      }
+    }
+
+    function normalizeImagePromptLine(line) {
+      return line
+        .replace(/^\s*(?:[-*•]|\d+[\.、）)])\s*/, "")
+        .replace(/^\s*(?:封面图提示词?|正文配图提示词?|信息图提示词?|封面图?|正文配图|信息图|配图提示词?)\s*[:：-]?\s*/, "")
+        .trim();
+    }
+
+    function extractImagePrompts(text) {
+      const section = extractMarkdownSection(text, "配图提示") || extractMarkdownSection(text, "配图提示词");
+      const source = section || (() => {
+        const lines = String(text || "").split("\n");
+        const start = lines.findIndex((line) => /^\s*(?:#{1,3}\s*)?配图提示词?\s*[:：]?/.test(line.trim()));
+        if (start === -1) return "";
+        const headingMatch = lines[start].trim().match(/^\s*(?:#{1,3}\s*)?配图提示词?\s*[:：]\s*(.*)$/);
+        const firstLine = headingMatch?.[1] ? [headingMatch[1]] : [];
+        const nextHeading = lines.findIndex((line, index) => index > start && /^\s*#{1,3}\s+/.test(line));
+        return [...firstLine, ...lines.slice(start + 1, nextHeading === -1 ? undefined : nextHeading)].join("\n");
+      })();
+      if (!source) return [];
+      return source
+        .split("\n")
+        .map(normalizeImagePromptLine)
+        .filter((line) => line && !/^发布摘要\s*[:：]?/.test(line))
+        .slice(0, 3);
+    }
+
+    function getContentLinesForImagePrompts(text) {
+      return String(text || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line && !/^#{1,3}\s/.test(line) && !/^\d+[\.、]/.test(line))
+        .filter((line) => !/^(标题候选|封面文案|配图提示|发布摘要)\s*[:：]?/.test(line))
+        .filter((line) => line.length >= 12)
+        .map((line) => line.replace(/[「」“”]/g, "").slice(0, 70));
+    }
+
+    function getSpecificDetailsForImagePrompts() {
+      const facts = clean($("facts").value);
+      const lines = getContentLinesForImagePrompts(lastPlainText);
+      const details = [];
+      if (facts) details.push(...facts.split(/[；;。\n]/).map((item) => item.trim()).filter(Boolean));
+      details.push(...lines);
+      return [...new Set(details)].slice(0, 6);
+    }
+
+    function buildFallbackImagePrompts(count) {
+      const topic = clean($("topic").value, extractAiTitle(lastPlainText, "教育现实评论"));
+      const imageStyle = clean($("imageStyle").value, "纪实摄影风");
+      const details = getSpecificDetailsForImagePrompts();
+      const coverDetail = details[0] || topic;
+      const bodyDetail = details[1] || details[0] || topic;
+      const analysisDetail = details[2] || details[1] || topic;
+      return [
+        `封面图：围绕“${topic}”呈现具体冲突：${coverDetail}；横向构图，${imageStyle}，人物表情克制但有压力，画面不要出现可读文字、水印、Logo。`,
+        `正文配图：表现文章中的这一幕：${bodyDetail}；加入真实生活物件和环境细节，像手机随手拍到的现实场景，避免摆拍感，不要重复封面构图。`,
+        `信息图：把“${analysisDetail}”转成视觉隐喻，用账单、日历、路线、选择岔路或层层压力的版式表达成本与取舍；无可读文字，无Logo。`,
+      ].slice(0, count);
+    }
+
+    function getSelectedImagePrompts() {
+      const count = Math.max(1, Math.min(3, Number($("imageCount").value || 1)));
+      const prompts = extractImagePrompts(lastPlainText);
+      return prompts.length ? prompts.slice(0, count) : buildFallbackImagePrompts(count);
+    }
+
+    function getParagraphHeading(paragraph) {
+      let node = paragraph.previousElementSibling;
+      while (node) {
+        if (node.matches("section.section") && node.querySelector("h3")) {
+          return node.querySelector("h3").textContent.trim();
+        }
+        node = node.previousElementSibling;
+      }
+      return "";
+    }
+
+    function getArticleContentParagraphs(articleBody) {
+      const aiMarkdown = articleBody.querySelector(".ai-markdown");
+      if (aiMarkdown) {
+        return Array.from(aiMarkdown.querySelectorAll("p")).filter((paragraph) => {
+          const heading = getParagraphHeading(paragraph);
+          return !["标题", "封面文案", "配图提示"].includes(heading);
+        });
+      }
+
+      return Array.from(articleBody.querySelectorAll(".section p")).filter((paragraph) => {
+        const section = paragraph.closest(".section");
+        if (!section || section.parentElement !== articleBody) return false;
+        const heading = section.querySelector("h3")?.textContent.trim() || "";
+        return heading !== "配图提示";
+      });
+    }
+
+    function removeGeneratedImages() {
+      document.getElementById("generatedImagesBlock")?.remove();
+      document.querySelectorAll(".generated-image-block").forEach((node) => node.remove());
+    }
+
+    function cleanImageMarker(paragraph) {
+      paragraph.innerHTML = paragraph.innerHTML.replaceAll("【插图】", "").trim();
+      if (!paragraph.textContent.trim()) paragraph.remove();
+    }
+
+    function getDistributedImageTargets(paragraphs, count) {
+      if (!paragraphs.length) return [];
+      const targets = [];
+      const used = new Set();
+      for (let index = 0; index < count; index += 1) {
+        const position = Math.round(((index + 1) * paragraphs.length) / (count + 1)) - 1;
+        const clamped = Math.max(0, Math.min(paragraphs.length - 1, position));
+        let targetIndex = clamped;
+        while (used.has(targetIndex) && targetIndex < paragraphs.length - 1) targetIndex += 1;
+        while (used.has(targetIndex) && targetIndex > 0) targetIndex -= 1;
+        if (!used.has(targetIndex)) {
+          used.add(targetIndex);
+          targets.push(paragraphs[targetIndex]);
+        }
+      }
+      return targets;
+    }
+
+    function insertImageFigures(figures) {
+      const articleBody = document.querySelector(".article-body");
+      if (!articleBody || !figures.length) return false;
+      removeGeneratedImages();
+      const paragraphs = getArticleContentParagraphs(articleBody);
+      const markerTargets = paragraphs.filter((paragraph) => paragraph.textContent.includes("【插图】"));
+      const fallbackTargets = getDistributedImageTargets(
+        paragraphs.filter((paragraph) => !paragraph.textContent.includes("【插图】")),
+        Math.max(0, figures.length - markerTargets.length)
+      );
+      const targets = [...markerTargets, ...fallbackTargets]
+        .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)
+        .slice(0, figures.length);
+
+      figures.forEach((figure, index) => {
+        const target = targets[index];
+        if (target) {
+          const hasMarker = target.textContent.includes("【插图】");
+          target.insertAdjacentHTML("afterend", figure);
+          if (hasMarker) cleanImageMarker(target);
+        } else {
+          articleBody.insertAdjacentHTML("beforeend", figure);
+        }
+      });
+      return true;
+    }
+
+    function insertGeneratedImagesHtml(html) {
+      const articleBody = document.querySelector(".article-body");
+      if (!articleBody) return false;
+      removeGeneratedImages();
+      const paragraphs = getArticleContentParagraphs(articleBody);
+      const target = paragraphs[Math.floor((paragraphs.length - 1) / 2)];
+      if (target) {
+        target.insertAdjacentHTML("afterend", html);
+      } else {
+        articleBody.insertAdjacentHTML("beforeend", html);
+      }
+      return true;
+    }
+
+    function renderLocalImageFallback({ title, coverSub, prompts }) {
+      if (!prompts.length) return;
+      const gradient = gradients[Math.abs(title.length + coverSub.length) % gradients.length];
+      const html = `
+        <section class="section" id="generatedImagesBlock">
+          <h3>本地封面与配图提示词</h3>
+          <figure class="image-block">
+            <div class="image-visual" style="--visual:${gradient}">
+              <span>${escapeHtml(title)}</span>
+              <small>${escapeHtml(coverSub)}</small>
+            </div>
+            <figcaption class="image-caption">本地封面占位图，不调用任何图片接口。可直接截图使用，也可以复制下面提示词到其他生图平台。</figcaption>
+          </figure>
+          <div class="title-options">
+            ${prompts.map((prompt, index) => `<div class="title-option">${index + 1}. ${escapeHtml(prompt)}</div>`).join("")}
+          </div>
+        </section>
+      `;
+      insertGeneratedImagesHtml(html);
+    }
+
+    function renderGeneratedImages(images) {
+      if (!images.length) return;
+      const figures = images.map((image) => `
+        <figure class="image-block generated-image-block">
+          <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label)}" style="width:100%;display:block;background:#efe1cd;" />
+          <figcaption class="image-caption">${escapeHtml(image.label)}｜${escapeHtml(image.prompt)}</figcaption>
+        </figure>
+      `);
+      insertImageFigures(figures);
+    }
+
+    function getQwenRawError(data) {
+      const failure = data?.failures?.[0];
+      return failure?.detail?.message
+        || failure?.detail?.error?.message
+        || failure?.detail?.code
+        || failure?.error
+        || data?.detail?.message
+        || data?.detail?.error?.message
+        || data?.detail?.code
+        || data?.error
+        || "";
+    }
+
+    function explainQwenTestResult(data) {
+      const raw = getQwenRawError(data);
+      if (data.ok) {
+        return `测试成功：模型 ${data.model} 已创建任务并返回图片 URL。task_id：${data.taskId}`;
+      }
+      if (data.step === "create_task_rate_limited") {
+        return `卡在创建任务：服务端返回限流。HTTP ${data.httpStatus || "未知"}。当前模型：${clean($("qwenImageModel").value)}。原始错误：${raw || "无"}`;
+      }
+      if (data.step === "create_task_failed") {
+        return `卡在创建任务：没有拿到 task_id。HTTP ${data.httpStatus || "未知"}。当前模型：${clean($("qwenImageModel").value)}。原始错误：${raw || "无"}`;
+      }
+      if (data.step === "poll_task_failed") {
+        return `卡在轮询结果：任务已创建，但生成过程失败。HTTP ${data.httpStatus || "未知"}。原始错误：${raw || "无"}`;
+      }
+      return data.error || "图片接口测试失败";
+    }
+
+    function renderDiagnosticBox(message, data) {
+      const articleBody = document.querySelector(".article-body") || $("result");
+      if (!articleBody) return;
+      const old = document.getElementById("diagnosticBox");
+      if (old) old.remove();
+      const detail = data ? JSON.stringify(data, null, 2) : "";
+      articleBody.insertAdjacentHTML("afterbegin", `<div class="diagnostic-box" id="diagnosticBox">${escapeHtml(message)}\n\n${escapeHtml(detail)}</div>`);
+    }
+
+    async function testQwenImageApi() {
+      const imagePayload = getImagePayloadBase({ required: true });
+      if (!imagePayload) return;
+
+      const button = $("testQwenImage");
+      button.disabled = true;
+      button.textContent = "测试中...";
+      $("statusText").textContent = "正在测试图片接口；接口限制 2 次/分钟，可能会先等待冷却...";
+
+      try {
+        const response = await fetch(getTestQwenImageEndpoint(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(imagePayload),
+        });
+        const data = await response.json();
+        const message = explainQwenTestResult(data);
+        $("statusText").textContent = data.ok ? "图片接口测试成功" : "图片接口测试失败";
+        renderDiagnosticBox(message, data);
+        showToast(message);
+        if (data.url) {
+          renderGeneratedImages([{ index: 0, label: "接口测试图", prompt: "教育类文章封面，普通家庭书桌场景，干净留白", url: data.url }]);
+        }
+      } catch (error) {
+        $("statusText").textContent = "图片接口测试失败";
+        showToast(error.message || "测试失败，请确认本地服务已启动");
+      } finally {
+        button.disabled = false;
+        button.textContent = "测试图片接口";
+      }
+    }
+
+    async function generateImagesForCurrentArticle({ silent = false } = {}) {
+      if (!lastPlainText) {
+        showToast("请先生成文章");
+        return;
+      }
+
+      const imagePayload = getImagePayloadBase({ required: true });
+      if (!imagePayload) return;
+
+      const prompts = getSelectedImagePrompts();
+      if (!prompts.length) {
+        showToast("文章里没有找到配图提示词");
+        return;
+      }
+
+      const button = $("generateImages");
+      button.disabled = true;
+      button.textContent = "配图中...";
+      $("statusText").textContent = "正在生成配图；图片任务下发限制 2 次/分钟，多张图会自动排队...";
+
+      try {
+        const response = await fetch(getImagesEndpoint(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...imagePayload,
+            topic: clean($("topic").value),
+            prompts,
+          }),
+        });
+        const data = await response.json();
+        const rawError = getQwenRawError(data);
+        if (!response.ok) {
+          const error = new Error(rawError || data.error || "生成配图失败");
+          error.data = data;
+          throw error;
+        }
+        renderGeneratedImages(data.images || []);
+        if (data.failures?.length) {
+          const message = `${data.model || imagePayload.qwenImageModel} 已生成 ${(data.images || []).length} 张配图，${data.failures.length} 张失败：${rawError || data.failures[0].error}`;
+          $("statusText").textContent = message;
+          renderDiagnosticBox(message, data);
+          if (!silent) showToast(message);
+        } else {
+          $("statusText").textContent = `${data.model || imagePayload.qwenImageModel} 已生成 ${(data.images || []).length} 张配图`;
+        }
+      } catch (error) {
+        const title = extractAiTitle(lastPlainText, clean($("topic").value, "教育现实评论"));
+        const coverSub = extractMarkdownSection(lastPlainText, "封面文案") || "图片接口暂不可用，已切换本地兜底。";
+        renderLocalImageFallback({ title, coverSub, prompts });
+        const message = error.message || "配图生成失败，已切换本地兜底";
+        $("statusText").textContent = `图片模型生图失败：${message}`;
+        renderDiagnosticBox(`图片模型生图失败：${message}`, error.data);
+        if (!silent) showToast(message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "生成配图";
+      }
+    }
+
+    function renderHumanizedResult(text, payload) {
+      const title = extractAiTitle(text, "去 AI 味优化稿");
+      $("result").innerHTML = `
+        <article class="article">
+          <div class="cover" style="--cover:linear-gradient(135deg, #123e36 0%, #ff7a45 100%)">
+            <div class="cover-kicker">Humanizer-zh 优化</div>
+            <div>
+              <h2>${escapeHtml(title)}</h2>
+              <div class="cover-sub">已减少模板腔、空泛金句和机械排比，保留原文观点与结构。</div>
+            </div>
+          </div>
+          <div class="article-body">
+            <div class="meta">
+              <span class="tag">模型：${escapeHtml(payload.model)}</span>
+              <span class="tag">状态：去 AI 味完成</span>
+            </div>
+            <div class="ai-markdown">
+              ${markdownToHtml(text)}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    async function generate() {
+      const basePayload = getApiPayloadBase();
+      if (!basePayload) return;
+
+      const topic = clean($("topic").value);
+      if (!topic) {
+        showToast("请先输入选题主题");
+        $("topic").focus();
+        return;
+      }
+
+      const generateButton = $("generate");
+      const payload = {
+        ...basePayload,
+        topic,
+        audience: clean($("audience").value, "家长"),
+        stance: clean($("stance").value, "理性避坑"),
+        facts: clean($("facts").value, ""),
+        tone: $("tone").value,
+        length: $("length").value,
+        imageStyle: clean($("imageStyle").value, "教育现实场景"),
+      };
+
+      generateButton.disabled = true;
+      generateButton.textContent = "正在生成...";
+      $("statusText").textContent = `正在调用 ${payload.model} 生成...`;
+
+      try {
+        const response = await fetch(getDeepSeekEndpoint(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "DeepSeek 生成失败");
+
+        lastPlainText = data.text || "";
+        lastArticleText = data.text || "";
+        renderAiResult(lastPlainText, payload);
+        getImagePayloadBase({ required: false });
+        const imagePrompts = getSelectedImagePrompts();
+        renderLocalImageFallback({
+          title: extractAiTitle(lastPlainText, payload.topic),
+          coverSub: extractMarkdownSection(lastPlainText, "封面文案") || payload.stance,
+          prompts: imagePrompts,
+        });
+        $("statusText").textContent = `${data.model || payload.model} 已生成，本地封面和配图提示词已准备好`;
+        if ($("autoImages").value === "yes" && clean($("qwenImageApiKey").value)) {
+          await generateImagesForCurrentArticle({ silent: true });
+        }
+      } catch (error) {
+        $("statusText").textContent = "生成失败，请确认本地服务已启动";
+        showToast(error.message || "生成失败");
+      } finally {
+        generateButton.disabled = false;
+        generateButton.textContent = "生成图文内容";
+      }
+    }
+
+    function render(article, topic, audience, stance, imageStyle, facts) {
+      const gradient = gradients[Math.abs(topic.length + facts.length) % gradients.length];
+      const sectionsHtml = article.sections.map((s, idx) => `
+        <section class="section">
+          <h3>${escapeHtml(s.heading)}</h3>
+          ${renderParagraphs(s.paragraphs)}
+          ${idx === 1 ? `<div class="quote">这不是一个人的尴尬，而是一批普通家庭的现实。</div>` : ""}
+          ${idx === 2 ? imageBlock("场景配图", article.imagePrompts[1], "linear-gradient(135deg, #c06b3e, #1d6b5b)") : ""}
+          ${idx === 3 ? imageBlock("原因拆解", article.imagePrompts[2], "linear-gradient(135deg, #16202a, #ff7a45)") : ""}
+        </section>
+      `).join("");
+
+      $("result").innerHTML = `
+        <article class="article">
+          <div class="cover" style="--cover:${gradient}">
+            <div class="cover-kicker">教育现实评论</div>
+            <div>
+              <h2>${escapeHtml(article.title)}</h2>
+              <div class="cover-sub">${escapeHtml(article.coverSub)}</div>
+            </div>
+          </div>
+
+          <div class="article-body">
+            <div class="meta">
+              <span class="tag">读者：${escapeHtml(audience)}</span>
+              <span class="tag">立场：${escapeHtml(stance)}</span>
+              <span class="tag">图像：${escapeHtml(imageStyle)}</span>
+            </div>
+
+            <h3>标题候选</h3>
+            <div class="title-options">
+              ${article.titles.map((t, i) => `<div class="title-option">${i + 1}. ${escapeHtml(t)}</div>`).join("")}
+            </div>
+
+            ${imageBlock("封面配图", article.imagePrompts[0], gradient)}
+            ${sectionsHtml}
+
+            <section class="section">
+              <h3>结尾</h3>
+              <p>${escapeHtml(article.ending)}</p>
+            </section>
+
+            <section class="section">
+              <h3>配图提示</h3>
+              ${article.imagePrompts.map(p => `<p>${escapeHtml(p)}</p>`).join("")}
+            </section>
+
+            <div class="prompt-box"><strong>发布摘要：</strong>\n${escapeHtml(article.summary)}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function imageBlock(label, prompt, gradient) {
+      return `
+        <figure class="image-block">
+          <div class="image-visual" style="--visual:${gradient}">${escapeHtml(label)}</div>
+          <figcaption class="image-caption">${escapeHtml(prompt)}</figcaption>
+        </figure>
+      `;
+    }
+
+    function fillSample() {
+      $("topic").value = "县城家长花 5 万给孩子报研学，到底值不值？";
+      $("audience").value = "家长";
+      $("stance").value = "理性避坑";
+      $("facts").value = "研学 7 天 49800 元；家长群很多人在报名；孩子刚上初一；机构强调名校路线和证书；父母担心不报会错过机会";
+      $("tone").value = "balanced";
+      $("length").value = "medium";
+      $("imageStyle").value = "家长群聊天/教育消费场景";
+      generate();
+    }
+
+    async function copy(text) {
+      if (!text) {
+        showToast("请先生成内容");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("已复制");
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        showToast("已复制");
+      }
+    }
+
+    function downloadHtml() {
+      if (!lastPlainText) {
+        showToast("请先生成内容");
+        return;
+      }
+      const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>生成文章</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;max-width:820px;margin:40px auto;padding:0 20px;line-height:1.9;color:#211d18;background:#fbf5eb}h1{font-family:Georgia,'Songti SC',serif;line-height:1.2}.box{white-space:pre-wrap;background:#fffaf2;border:1px solid #e7dccb;border-radius:20px;padding:28px}</style></head><body><h1>生成文章</h1><div class="box">${escapeHtml(lastPlainText)}</div></body></html>`;
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "教育现实评论文章.html";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function getHeadingBeforeNode(node) {
+      let current = node.previousElementSibling;
+      while (current) {
+        if (current.matches("section.section") && current.querySelector("h3")) {
+          return current.querySelector("h3").textContent.trim();
+        }
+        current = current.previousElementSibling;
+      }
+      return "";
+    }
+
+    function shouldSkipSaveNode(node) {
+      if (node.closest("#generatedImagesBlock") || node.closest("#diagnosticBox") || node.closest(".meta")) return true;
+      const heading = getHeadingBeforeNode(node);
+      return ["标题", "标题候选", "封面文案", "配图提示", "配图提示词", "发布摘要"].includes(heading);
+    }
+
+    function getParagraphHtmlForSave(node) {
+      const clone = node.cloneNode(true);
+      clone.querySelectorAll("script, style").forEach((child) => child.remove());
+      clone.innerHTML = clone.innerHTML.replaceAll("【插图】", "").trim();
+      return clone.textContent.trim() ? clone.innerHTML : "";
+    }
+
+    function getCurrentArticleForSave() {
+      const article = document.querySelector(".article");
+      if (!article) return null;
+      const pageTitle = article.querySelector(".cover h2")?.textContent.trim() || "";
+      const parsedTitle = extractAiTitle(lastPlainText, clean($("topic").value, "教育现实评论"));
+      const rawTitle = pageTitle && pageTitle !== "标题" ? pageTitle : parsedTitle;
+      const title = rawTitle.replace(/^【?标题】?\s*[:：]?\s*/, "").trim();
+      const blocks = [];
+      article.querySelectorAll(".article-body p, .article-body figure.generated-image-block").forEach((node) => {
+        if (shouldSkipSaveNode(node)) return;
+        if (node.matches("p")) {
+          const html = getParagraphHtmlForSave(node);
+          if (html) blocks.push({ type: "paragraph", html });
+        } else {
+          const img = node.querySelector("img");
+          if (img?.src) blocks.push({ type: "image", url: img.src });
+        }
+      });
+      return { title, blocks };
+    }
+
+    async function saveArticleToLocal() {
+      const payload = getCurrentArticleForSave();
+      if (!payload || !payload.blocks.length) {
+        showToast("请先生成文章");
+        return;
+      }
+      const button = $("saveLocal");
+      button.disabled = true;
+      button.textContent = "保存中...";
+      try {
+        const response = await fetch(getSaveArticleEndpoint(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "保存失败");
+        $("statusText").textContent = `已保存到本地：${data.filename}`;
+        showToast("已保存到本地项目文件夹");
+      } catch (error) {
+        showToast(error.message || "保存到本地失败");
+      } finally {
+        button.disabled = false;
+        button.textContent = "保存到本地";
+      }
+    }
+
+    function showToast(text) {
+      const toast = $("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function openApiSettings() {
+      const modal = $("apiSettingsModal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeApiSettings() {
+      const modal = $("apiSettingsModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function syncTextProviderDefaults() {
+      if ($("textProvider").value === "custom") {
+        if (["deepseek-chat", "deepseek-reasoner"].includes(clean($("model").value))) $("model").value = "";
+        if (clean($("apiBaseUrl").value) === "https://api.deepseek.com") $("apiBaseUrl").value = "";
+        return;
+      }
+      if (!clean($("model").value)) $("model").value = "deepseek-chat";
+      if (!clean($("apiBaseUrl").value)) $("apiBaseUrl").value = "https://api.deepseek.com";
+    }
+
+    function syncImageProviderDefaults() {
+      if ($("imageProvider").value === "custom") {
+        if (["qwen-image-2.0-pro", "qwen-image-2.0", "wan2.6-t2i"].includes(clean($("qwenImageModel").value))) $("qwenImageModel").value = "";
+        if (clean($("imageBaseUrl").value) === "https://dashscope.aliyuncs.com/compatible-mode/v1") $("imageBaseUrl").value = "";
+        $("imageProtocol").value = "openai-compatible";
+        $("imageProtocol").disabled = true;
+        return;
+      }
+      if (!clean($("qwenImageModel").value)) $("qwenImageModel").value = "qwen-image-2.0-pro";
+      if (!clean($("imageBaseUrl").value)) $("imageBaseUrl").value = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+      $("imageProtocol").disabled = false;
+    }
+
+    loadSavedApiSettings();
+    syncTextProviderDefaults();
+    syncImageProviderDefaults();
+    $("textProvider").addEventListener("change", syncTextProviderDefaults);
+    $("imageProvider").addEventListener("change", syncImageProviderDefaults);
+    $("openApiSettings").addEventListener("click", openApiSettings);
+    $("closeApiSettings").addEventListener("click", closeApiSettings);
+    $("doneApiSettings").addEventListener("click", closeApiSettings);
+    $("apiSettingsModal").addEventListener("click", (event) => {
+      if (event.target === $("apiSettingsModal")) closeApiSettings();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && $("apiSettingsModal").classList.contains("open")) closeApiSettings();
+    });
+    $("generate").addEventListener("click", generate);
+    $("testQwenImage").addEventListener("click", testQwenImageApi);
+    $("generateImages").addEventListener("click", () => generateImagesForCurrentArticle());
+    $("humanize").addEventListener("click", humanizeCurrentText);
+    $("sample").addEventListener("click", fillSample);
+    $("copyText").addEventListener("click", () => copy(lastArticleText));
+    $("copyAll").addEventListener("click", () => copy(lastPlainText));
+    $("saveLocal").addEventListener("click", saveArticleToLocal);
+    $("download").addEventListener("click", downloadHtml);
+  </script>
+</body>
+</html>
